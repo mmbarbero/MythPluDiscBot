@@ -48,7 +48,7 @@ async def on_message(message):
             await message.channel.send("Updated routes")
         elif(msg in wagos):
             await message.channel.send(wagos[msg])
-        elif(msg == "yep")
+        elif(msg == "yep"):
             await message.channel.send("COCK")
         else:
            await message.channel.send("Command not found") 
