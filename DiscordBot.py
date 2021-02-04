@@ -5,11 +5,13 @@ import datetime
 import urllib.parse
 import discord
 import os
+import emojis
 from dotenv import load_dotenv
 
 load_dotenv()
 
 client = discord.Client()
+
 url = os.getenv("URL")
 dungeonList = ["dos","mots","hoa","pf","sd","soa","nw","top"]
 
@@ -30,7 +32,27 @@ def updateLinks():
         wago = src.split("/e")[0]
         wagos[dungeonList[count]] = wago
         count += 1
-      
+
+currencies = [":dollar:", ":euro:", ":money_with_wings:", ":yen:",":pound:"]
+async def countCurse():
+    chan = await client.fetch_channel(os.getenv("CURSE_HOLE"))
+    messages = await chan.history(limit=500).flatten()
+    count = 0
+    authors = []
+    pairs = {}
+    for msg in messages: 
+        decoded = emojis.decode(msg.content)
+        for currency in currencies:  
+            if(currency in decoded):
+                currCount =  decoded.count(currency) 
+                author = msg.author.name
+                if(author not in authors):
+                    authors.append(author)
+                    pairs[author] = currCount
+                else:
+                    pairs[author] = int(pairs.get(author)) +currCount
+           
+    return str(pairs)
 
 @client.event
 async def on_ready():
@@ -50,6 +72,9 @@ async def on_message(message):
             await message.channel.send(wagos[msg])
         elif(msg == "yep"):
             await message.channel.send("COCK")
+        elif (msg == "count"):
+            cnt = await countCurse()
+            await message.channel.send(cnt)
         else:
            await message.channel.send("Command not found") 
 
