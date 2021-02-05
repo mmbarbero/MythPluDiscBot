@@ -1,1 +1,7 @@
 *.env
+Dockerfile
+.gitignore
+.dockerignore
+docker-compose.debug.yml
+docker-compose.yml
+.vscode

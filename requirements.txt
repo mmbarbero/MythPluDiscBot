@@ -1,8 +1,9 @@
-pandas
+bs4
 requests
-discord.py
-beautifulsoup4
-discord
-python-dotenv
-html5lib
 emojis
+pandas
+html5lib
+discord.py
+numpy
+urllib3
+python-dotenv
