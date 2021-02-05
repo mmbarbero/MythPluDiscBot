@@ -37,7 +37,6 @@ currencies = [":dollar:", ":euro:", ":money_with_wings:", ":yen:",":pound:"]
 async def countCurse():
     chan = await client.fetch_channel(os.getenv("CURSE_HOLE"))
     messages = await chan.history(limit=500).flatten()
-    count = 0
     authors = []
     pairs = {}
     for msg in messages: 
@@ -51,13 +50,18 @@ async def countCurse():
                     pairs[author] = currCount
                 else:
                     pairs[author] = int(pairs.get(author)) +currCount
-           
-    return str(pairs)
+    
+    sortedPairs = {}
+    sortedKeys = sorted(pairs, key=pairs.get, reverse=True)
+    for key in sortedKeys:
+        sortedPairs[key] = pairs[key] 
+    pairsString = str(sortedPairs).replace(",", "\n").replace("{","").replace("}","").replace("'","")             
+    return pairsString
 
 @client.event
 async def on_ready():
     updateLinks()
-    print('We have logged in as {0.user}'.format(client))
+    print('Bot logged in as {0.user}'.format(client))
 
 @client.event
 async def on_message(message):
