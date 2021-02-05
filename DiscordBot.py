@@ -35,7 +35,7 @@ def updateLinks():
 
 currencies = [":dollar:", ":euro:", ":money_with_wings:", ":yen:",":pound:"]
 async def countCurse():
-    chan = await client.fetch_channel(os.getenv("TOKEN"))
+    chan = await client.fetch_channel(os.getenv("CURSE_HOLE"))
     messages = await chan.history(limit=500).flatten()
     authors = []
     pairs = {}
