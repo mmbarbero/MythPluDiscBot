@@ -7,8 +7,6 @@ import discord
 import os
 import datetime
 import emojis
-import time
-import threading
 import asyncio
 from dotenv import load_dotenv
 
@@ -74,7 +72,7 @@ async def gotmCurrent():
 
 async def monthlyGotmCheck():
     currentDate = datetime.datetime.now()
-    if(currentDate.day == 28):
+    if(currentDate.day == 1):
         chan = await client.fetch_channel(os.getenv("CHANNEL1"))
         endDate = datetime.datetime(currentDate.year,currentDate.month,currentDate.day)
         startDate = datetime.datetime(currentDate.year,currentDate.month-1 ,1)
