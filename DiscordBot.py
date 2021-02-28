@@ -5,7 +5,9 @@ import datetime
 import urllib.parse
 import discord
 import os
+import datetime
 import emojis
+import asyncio
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,16 +29,19 @@ wagos = {}
 def updateLinks():
     soup = webToSoup(url)
     count = 0
-    for iframe in soup.find_all("iframe"):
+    for iframe in soup.find_all("iframe")[:8]:
         src = iframe.get("src")
         wago = src.split("/e")[0]
         wagos[dungeonList[count]] = wago
         count += 1
 
 currencies = [":dollar:", ":euro:", ":money_with_wings:", ":yen:",":pound:"]
-async def countCurse():
-    chan = await client.fetch_channel(os.getenv("CURSE_HOLE"))
-    messages = await chan.history(limit=500).flatten()
+async def countCurrency(*dates):
+    chan = await client.fetch_channel(os.getenv("CHANNEL1"))
+    if dates:
+        messages = await chan.history(limit=500, before=dates[0], after=dates[1]).flatten()
+    elif not dates:
+        messages = await chan.history(limit=500).flatten()
     authors = []
     pairs = {}
     for msg in messages: 
@@ -50,17 +55,47 @@ async def countCurse():
                     pairs[author] = currCount
                 else:
                     pairs[author] = int(pairs.get(author)) +currCount
-    
     sortedPairs = {}
     sortedKeys = sorted(pairs, key=pairs.get, reverse=True)
     for key in sortedKeys:
-        sortedPairs[key] = pairs[key] 
-    pairsString = str(sortedPairs).replace(",", "\n").replace("{","").replace("}","").replace("'","")             
-    return pairsString
+        sortedPairs[key] = pairs[key]
+    return sortedPairs
 
+async def gotmCurrent():
+    currentDate = datetime.datetime.now()
+    startDate = datetime.datetime(currentDate.year,currentDate.month,1)
+    count = await countCurrency(currentDate,startDate)
+    gotm = next(iter(count.keys()))
+    pairsString = str(count).replace(",", "\n").replace("{","").replace("}","").replace("'","")     
+    msg = ("Currently **"+ str(gotm) + "** is Gamer of The Month!\n" + "Here's the leaderboard: \n"+ pairsString)
+    return msg
+
+async def monthlyGotmCheck():
+    currentDate = datetime.datetime.now()
+    if(currentDate.day == 1):
+        chan = await client.fetch_channel(os.getenv("CHANNEL1"))
+        endDate = datetime.datetime(currentDate.year,currentDate.month,currentDate.day)
+        startDate = datetime.datetime(currentDate.year,currentDate.month-1 ,1)
+        count = await countCurrency(endDate,startDate)
+        try:
+            gotm = next(iter(count.keys()))
+        except:
+            await chan.send("No users founds")
+            return
+        pairsString = str(count).replace(",", "\n").replace("{","").replace("}","").replace("'","")     
+        msg = ("Congrats **"+ str(gotm) + "**, you are Gamer of The Month!\n" + "Here's the leaderboard: \n"+ pairsString)
+        await chan.send(msg)
+
+async def gotmThread():
+    print("Month checker running")
+    while True:
+        await monthlyGotmCheck()
+        await asyncio.sleep(24*3600)
+   
 @client.event
 async def on_ready():
     updateLinks()
+    asyncio.get_event_loop().create_task(gotmThread())
     print('Bot logged in as {0.user}'.format(client))
 
 @client.event
@@ -77,11 +112,18 @@ async def on_message(message):
         elif(msg == "yep"):
             await message.channel.send("COCK")
         elif (msg == "count"):
-            cnt = await countCurse()
-            await message.channel.send(cnt)
+            count = await countCurrency()
+            pairsString = str(count).replace(",", "\n").replace("{","").replace("}","").replace("'","")     
+            await message.channel.send(pairsString)
+        elif (msg == "gotm"):
+            count = await gotmCurrent()
+            await message.channel.send(count)
         else:
-           await message.channel.send("Command not found") 
+            await message.channel.send("Command not found")
+
 
 client.run(os.getenv("TOKEN"))
+
+
 
 
