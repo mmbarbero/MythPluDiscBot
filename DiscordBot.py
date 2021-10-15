@@ -1,13 +1,14 @@
-from bs4 import BeautifulSoup
+import asyncio
+import datetime
+import os
+import urllib.parse
+from datetime import date
+
+import discord
+import emojis
 import pandas as pd
 import requests
-import datetime
-import urllib.parse
-import discord
-import os
-import datetime
-import emojis
-import asyncio
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,7 +19,6 @@ url = os.getenv("URL")
 dungeonList = ["dos","mots","hoa","pf","sd","soa","nw","top"]
 
 def webToSoup(webpage):
-
     result = requests.get(webpage)
     assert(result.status_code == 200)
     src = result.content
@@ -70,6 +70,7 @@ async def gotmCurrent():
     msg = ("Currently **"+ str(gotm) + "** is Gamer of The Month!\n" + "Here's the leaderboard: \n"+ pairsString)
     return msg
 
+
 async def monthlyGotmCheck():
     currentDate = datetime.datetime.now()
     if(currentDate.day == 1):
@@ -81,17 +82,31 @@ async def monthlyGotmCheck():
             gotm = next(iter(count.keys()))
         except:
             await chan.send("No users founds")
+          
             return
         pairsString = str(count).replace(",", "\n").replace("{","").replace("}","").replace("'","")     
         msg = ("Congrats **"+ str(gotm) + "**, you are Gamer of The Month!\n" + "Here's the leaderboard: \n"+ pairsString)
         await chan.send(msg)
 
+
+async def fridayCheck():
+    chan = await client.fetch_channel(os.getenv("CHANNEL1"))
+    currentDay = date.today().weekday()
+    if(currentDay == 4):
+        await chan.send("Check out Daft Punk's new single \"Get Lucky\" if you get the chance. Sound of the summer.")
+        
+
+
+
+
 async def gotmThread():
-    print("Month checker running")
     while True:
+        print("Checking...")
+        await fridayCheck()
         await monthlyGotmCheck()
         await asyncio.sleep(24*3600)
-   
+
+
 @client.event
 async def on_ready():
     updateLinks()
@@ -118,6 +133,8 @@ async def on_message(message):
         elif (msg == "gotm"):
             count = await gotmCurrent()
             await message.channel.send(count)
+        elif (msg == "wake"):
+            await message.channel.send(str(os.getenv("LIMMY")))
         else:
             await message.channel.send("Command not found")
 
