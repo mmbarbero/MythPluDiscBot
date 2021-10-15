@@ -90,7 +90,7 @@ async def monthlyGotmCheck():
 
 
 async def fridayCheck():
-    chan = await client.fetch_channel(os.getenv("CHANNEL1"))
+    chan = await client.fetch_channel(os.getenv("MAINCHANNEL"))
     currentDay = date.today().weekday()
     if(currentDay == 4):
         await chan.send("Check out Daft Punk's new single \"Get Lucky\" if you get the chance. Sound of the summer.")
