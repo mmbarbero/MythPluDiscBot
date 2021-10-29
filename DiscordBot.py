@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 client = discord.Client()
-
+threadRunning = False
 url = os.getenv("URL")
 dungeonList = ["dos","mots","hoa","pf","sd","soa","nw","top"]
 
@@ -70,31 +70,41 @@ async def gotmCurrent():
     msg = ("Currently **"+ str(gotm) + "** is Gamer of The Month!\n" + "Here's the leaderboard: \n"+ pairsString)
     return msg
 
-
+monthlyFlag = False
 async def monthlyGotmCheck():
+    global monthlyFlag
     currentDate = datetime.datetime.now()
     if(currentDate.day == 1):
-        chan = await client.fetch_channel(os.getenv("CHANNEL1"))
-        endDate = datetime.datetime(currentDate.year,currentDate.month,currentDate.day)
-        startDate = datetime.datetime(currentDate.year,currentDate.month-1 ,1)
-        count = await countCurrency(endDate,startDate)
-        try:
-            gotm = next(iter(count.keys()))
-        except:
-            await chan.send("No users founds")
-          
-            return
-        pairsString = str(count).replace(",", "\n").replace("{","").replace("}","").replace("'","")     
-        msg = ("Congrats **"+ str(gotm) + "**, you are Gamer of The Month!\n" + "Here's the leaderboard: \n"+ pairsString)
-        await chan.send(msg)
+        if(monthlyFlag is False):
+            monthlyFlag = True
+            chan = await client.fetch_channel(os.getenv("CHANNEL1"))
+            endDate = datetime.datetime(currentDate.year,currentDate.month,currentDate.day)
+            startDate = datetime.datetime(currentDate.year,currentDate.month-1 ,1)
+            count = await countCurrency(endDate,startDate)
+            try:
+                gotm = next(iter(count.keys()))
+            except:
+                await chan.send("No users founds")
+            
+                return
+            pairsString = str(count).replace(",", "\n").replace("{","").replace("}","").replace("'","")     
+            msg = ("Congrats **"+ str(gotm) + "**, you are Gamer of The Month!\n" + "Here's the leaderboard: \n"+ pairsString)
+            await chan.send(msg)
+    else:
+        monthlyFlag = False
 
 
+fridayFlag = False
 async def fridayCheck():
+    global fridayFlag
     chan = await client.fetch_channel(os.getenv("MAINCHANNEL"))
     currentDay = date.today().weekday()
     if(currentDay == 4):
-        await chan.send("Check out Daft Punk's new single \"Get Lucky\" if you get the chance. Sound of the summer.")
-        
+        if fridayFlag is False:
+            fridayFlag = True
+            await chan.send("Check out Daft Punk's new single \"Get Lucky\" if you get the chance. Sound of the summer.")
+    else:
+        fridayFlag = False   
 
 
 
@@ -104,13 +114,13 @@ async def gotmThread():
         print("Checking...")
         await fridayCheck()
         await monthlyGotmCheck()
-        await asyncio.sleep(24*3600)
+        await asyncio.sleep(12*3600)
 
 
 @client.event
-async def on_ready():
+async def on_ready():   
     updateLinks()
-    asyncio.get_event_loop().create_task(gotmThread())
+    asyncio.get_event_loop().create_task(gotmThread()) if threadRunning == False else print("Thread Already Running")
     print('Bot logged in as {0.user}'.format(client))
 
 @client.event
@@ -121,6 +131,7 @@ async def on_message(message):
         msg = message.content.split("%")[1].lower()
         if(msg == "update"):
             updateLinks()
+            
             await message.channel.send("Updated routes")
         elif(msg in wagos):
             await message.channel.send(wagos[msg])
