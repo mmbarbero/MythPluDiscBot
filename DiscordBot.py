@@ -3,13 +3,15 @@ import datetime
 import os
 import urllib.parse
 from datetime import date
-
+import argparse
 import discord
 import emojis
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from google.cloud import vision
+import random
 
 load_dotenv()
 
@@ -17,6 +19,13 @@ client = discord.Client()
 threadRunning = False
 url = os.getenv("URL")
 dungeonList = ["dos","mots","hoa","pf","sd","soa","nw","top"]
+
+
+file = open("quotes.txt","r")
+quotes = []
+for line in file:
+    quotes.append(line)
+
 
 def webToSoup(webpage):
     result = requests.get(webpage)
@@ -34,6 +43,28 @@ def updateLinks():
         wago = src.split("/e")[0]
         wagos[dungeonList[count]] = wago
         count += 1
+
+
+def quote():
+    number = random.randint(0,len(quotes)-1)
+    return quotes[number]
+
+
+async def detect_labels_uri(uri):
+    client = vision.ImageAnnotatorClient()
+    image = vision.Image()
+    image.source.image_uri = uri
+
+    response = client.label_detection(image=image)
+    labels = response.label_annotations
+    labelList = [d.description.lower() for d in labels]
+    if response.error.message:
+        raise Exception(
+            '{}\nFor more info on error messages, check: '
+            'https://cloud.google.com/apis/design/errors'.format(
+                response.error.message))
+    return labelList
+
 
 currencies = [":dollar:", ":euro:", ":money_with_wings:", ":yen:",":pound:"]
 async def countCurrency(*dates):
@@ -93,7 +124,6 @@ async def monthlyGotmCheck():
     else:
         monthlyFlag = False
 
-
 fridayFlag = False
 async def fridayCheck():
     global fridayFlag
@@ -105,9 +135,6 @@ async def fridayCheck():
             await chan.send("Check out Daft Punk's new single \"Get Lucky\" if you get the chance. Sound of the summer.")
     else:
         fridayFlag = False   
-
-
-
 
 async def gotmThread():
     while True:
@@ -123,10 +150,28 @@ async def on_ready():
     asyncio.get_event_loop().create_task(gotmThread()) if threadRunning == False else print("Thread Already Running")
     print('Bot logged in as {0.user}'.format(client))
 
+
+fileTypes = [".jpeg", ".png", ".jpg"]
+negativeLabels = ["dog","cat","bird"]
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
+
+    if message.attachments:
+        for i in message.attachments:
+            for type in fileTypes:
+                if(i.filename.endswith(type)):
+                    foundLabel = []
+                    labels = await detect_labels_uri(i.url)   
+                    for l in negativeLabels:
+                        if l in labels:
+                            foundLabel.append(l)
+                    if len(foundLabel) == 1:
+                            await message.reply("Haha, what a funny " +l + " :rofl:")
+                    elif len(foundLabel) > 1:
+                            await message.reply("Wow, this " + " and ".join(foundLabel) + " are really funny! :smiling_face_with_3_hearts: ")
+ 
     if message.content.startswith('%'):
         msg = message.content.split("%")[1].lower()
         if(msg == "update"):
@@ -146,6 +191,8 @@ async def on_message(message):
             await message.channel.send(count)
         elif (msg == "wake"):
             await message.channel.send(str(os.getenv("LIMMY")))
+        elif (msg == "quote"):
+            await message.channel.send(quote())
         else:
             await message.channel.send("Command not found")
 

@@ -7,3 +7,4 @@ discord.py
 numpy
 urllib3
 python-dotenv
+google-cloud-vision

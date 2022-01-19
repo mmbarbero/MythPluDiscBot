@@ -5,3 +5,4 @@ Dockerfile
 docker-compose.debug.yml
 docker-compose.yml
 .vscode
+quotes.txt
