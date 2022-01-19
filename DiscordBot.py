@@ -167,7 +167,7 @@ async def on_message(message):
                         if l in labels:
                             foundLabel.append(l)
                     if len(foundLabel) == 1:
-                            await message.reply("Haha, what a funny " +foundLabel + " :rofl:")
+                            await message.reply("Haha, what a funny " +foundLabel[0] + " :rofl:")
                     elif len(foundLabel) > 1:
                             await message.reply("Wow, this " + " and ".join(foundLabel) + " are really funny! :smiling_face_with_3_hearts: ")
  
