@@ -19,7 +19,8 @@ client = discord.Client()
 threadRunning = False
 url = os.getenv("URL")
 dungeonList = ["dos","mots","hoa","pf","sd","soa","nw","top"]
-
+fileTypes = [".jpeg", ".png", ".jpg"]
+negativeLabels = ["dog","cat","bird"]
 
 file = open("quotes.txt","r")
 quotes = []
@@ -151,24 +152,22 @@ async def on_ready():
     print('Bot logged in as {0.user}'.format(client))
 
 
-fileTypes = [".jpeg", ".png", ".jpg"]
-negativeLabels = ["dog","cat","bird"]
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
-
     if message.attachments:
         for i in message.attachments:
             for type in fileTypes:
                 if(i.filename.endswith(type)):
                     foundLabel = []
-                    labels = await detect_labels_uri(i.url)   
+                    labels = await detect_labels_uri(i.url)
+                    print(labels)   
                     for l in negativeLabels:
                         if l in labels:
                             foundLabel.append(l)
                     if len(foundLabel) == 1:
-                            await message.reply("Haha, what a funny " +l + " :rofl:")
+                            await message.reply("Haha, what a funny " +foundLabel + " :rofl:")
                     elif len(foundLabel) > 1:
                             await message.reply("Wow, this " + " and ".join(foundLabel) + " are really funny! :smiling_face_with_3_hearts: ")
  
