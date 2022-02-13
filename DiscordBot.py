@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import os
+from traceback import print_tb
 import urllib.parse
 from datetime import date
 import argparse
@@ -22,7 +23,7 @@ dungeonList = ["dos","mots","hoa","pf","sd","soa","nw","top"]
 fileTypes = [".jpeg", ".png", ".jpg"]
 negativeLabels = ["dog","cat","bird"]
 
-file = open("quotes.txt","r")
+file = open("./Shared/quotes.txt","r")
 quotes = []
 for line in file:
     quotes.append(line)
