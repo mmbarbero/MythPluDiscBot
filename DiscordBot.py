@@ -15,14 +15,16 @@ import random
 
 load_dotenv()
 
-client = discord.Client()
+
+intents = discord.Intents.all()
+client = discord.Client(intents=intents)
 threadRunning = False
 url = os.getenv("URL")
 dungeonList = ["dos","mots","hoa","pf","sd","soa","nw","top"]
 fileTypes = [".jpeg", ".png", ".jpg"]
 negativeLabels = ["dog","cat","bird"]
 
-file = open("quotes.txt","r")
+file = open("./Shared/quotes.txt","r")
 quotes = []
 for line in file:
     quotes.append(line)
