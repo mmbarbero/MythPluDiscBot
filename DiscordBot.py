@@ -1,20 +1,18 @@
 import asyncio
 import datetime
 import os
-from traceback import print_tb
-import urllib.parse
 from datetime import date
-import argparse
 import discord
 import emojis
-import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
 from google.cloud import vision
 import random
+import json
+import io
+import base64
 
-load_dotenv()
+
 
 
 intents = discord.Intents.all()
@@ -29,7 +27,6 @@ file = open("./Shared/quotes.txt","r")
 quotes = []
 for line in file:
     quotes.append(line)
-
 
 def webToSoup(webpage):
     result = requests.get(webpage)
@@ -48,11 +45,9 @@ def updateLinks():
         wagos[dungeonList[count]] = wago
         count += 1
 
-
 def quote():
     number = random.randint(0,len(quotes)-1)
     return quotes[number]
-
 
 async def detect_labels_uri(uri):
     client = vision.ImageAnnotatorClient()
@@ -68,7 +63,6 @@ async def detect_labels_uri(uri):
             'https://cloud.google.com/apis/design/errors'.format(
                 response.error.message))
     return labelList
-
 
 currencies = [":dollar:", ":euro:", ":money_with_wings:", ":yen:",":pound:"]
 async def countCurrency(*dates):
@@ -148,6 +142,25 @@ async def gotmThread():
         await asyncio.sleep(12*3600)
 
 
+async def generateImage(prompt):
+    print(prompt)
+    payload = {
+    "prompt": prompt,
+    "steps": 20,
+    "sampler_index":'DDIM'
+    }
+    try:
+        response = requests.post(url=f'http://{os.getenv("SDServer_API")}/sdapi/v1/txt2img', json=payload)
+        if response.status_code == 200:
+            for i in response.json()['images']:
+                return '',io.BytesIO(base64.b64decode(i.split(",",1)[0]))
+        else:
+            return response.json()['detail'][0].get('msg'),None
+    except requests.exceptions.RequestException as e:
+        print(e)
+        return None,None
+    
+
 @client.event
 async def on_ready():   
     updateLinks()
@@ -195,11 +208,21 @@ async def on_message(message):
             await message.channel.send(str(os.getenv("LIMMY")))
         elif (msg == "quote"):
             await message.channel.send(quote())
+        elif ("gen" in msg):
+            prompt = msg.split("gen")[1]
+            await message.channel.send("Processing your prompt...")
+            response = await generateImage(prompt)
+            if response[1]:
+                await message.channel.send(file=discord.File(response[1],filename='output.png'))
+            elif response[0]:
+                await message.channel.send(response[0])
+            else:
+                await message.channel.send("SD server not online")
         else:
             await message.channel.send("Command not found")
 
 
-client.run(os.getenv("TOKEN"))
+client.run(os.getenv("TEST_TOKEN"))
 
 
 
